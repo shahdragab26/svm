@@ -1,58 +1,89 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
+import streamlit as st 
+import numpy as np 
+import pandas as pd 
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.model_selection import train_test_split
 
-# Load model and scaler
-model = joblib.load('diabetes_model.joblib')
-scaler = joblib.load('scaler.joblib')  # Make sure you saved this earlier
-lda = LinearDiscriminantAnalysis(n_components=1)
+# App title and description
+st.markdown("<h1 style='text-align: center; color: blue;'>DIADETECT</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: white;'>...a diabetes detection system</h4><br>", unsafe_allow_html=True)
+st.write("Diabetes is a chronic disease that occurs when your blood glucose is too high. This application helps to effectively detect if someone has diabetes using Machine Learning.")
 
-st.title("🩺 Diabetes Risk Classifier")
-st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
+# Load and clean data
+df = pd.read_csv("diabetes.csv")
+df[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']] = df[['Glucose','BloodPressure','SkinThickness','Insulin','BMI']].replace(0,np.NaN)
 
-# Input fields
-def user_input():
-    data = {
-        'HighBP': st.selectbox('High Blood Pressure', [0, 1]),
-        'HighChol': st.selectbox('High Cholesterol', [0, 1]),
-        'CholCheck': st.selectbox('Cholesterol Check in Past 5 Years', [0, 1]),
-        'BMI': st.slider('Body Mass Index', 10.0, 100.0, 25.0),
-        'Smoker': st.selectbox('Smoker', [0, 1]),
-        'Stroke': st.selectbox('Stroke', [0, 1]),
-        'HeartDiseaseorAttack': st.selectbox('Heart Disease or Attack', [0, 1]),
-        'PhysActivity': st.selectbox('Physical Activity', [0, 1]),
-        'Fruits': st.selectbox('Consumes Fruit Daily', [0, 1]),
-        'Veggies': st.selectbox('Consumes Vegetables Daily', [0, 1]),
-        'HvyAlcoholConsump': st.selectbox('Heavy Alcohol Consumption', [0, 1]),
-        'AnyHealthcare': st.selectbox('Has Healthcare Coverage', [0, 1]),
-        'NoDocbcCost': st.selectbox('Skipped Doctor Due to Cost', [0, 1]),
-        'GenHlth': st.selectbox('General Health (1=Excellent, 5=Poor)', [1, 2, 3, 4, 5]),
-        'MentHlth': st.slider('Poor Mental Health Days (last 30)', 0, 30, 0),
-        'PhysHlth': st.slider('Poor Physical Health Days (last 30)', 0, 30, 0),
-        'DiffWalk': st.selectbox('Difficulty Walking', [0, 1]),
-        'Sex': st.selectbox('Sex (0=Female, 1=Male)', [0, 1]),
-        'Age': st.selectbox('Age Category (1=18-24, ..., 13=80+)', list(range(1, 14))),
-        'Education': st.selectbox('Education Level (1=None, 6=College Grad)', list(range(1, 7))),
-        'Income': st.selectbox('Income Level (1=<10k, 8=75k+)', list(range(1, 9)))
+# Impute missing values based on Outcome
+df.loc[(df['Outcome'] == 0 ) & (df['Glucose'].isnull()), 'Glucose'] = 110.6
+df.loc[(df['Outcome'] == 1 ) & (df['Glucose'].isnull()), 'Glucose'] = 142.3
+df.loc[(df['Outcome'] == 0 ) & (df['BloodPressure'].isnull()), 'BloodPressure'] = 70.9
+df.loc[(df['Outcome'] == 1 ) & (df['BloodPressure'].isnull()), 'BloodPressure'] = 75.3
+df.loc[(df['Outcome'] == 0 ) & (df['SkinThickness'].isnull()), 'SkinThickness'] = 27.2
+df.loc[(df['Outcome'] == 1 ) & (df['SkinThickness'].isnull()), 'SkinThickness'] = 33.0
+df.loc[(df['Outcome'] == 0 ) & (df['Insulin'].isnull()), 'Insulin'] = 130.3
+df.loc[(df['Outcome'] == 1 ) & (df['Insulin'].isnull()), 'Insulin'] = 206.8
+df.loc[(df['Outcome'] == 0 ) & (df['BMI'].isnull()), 'BMI'] = 30.9
+df.loc[(df['Outcome'] == 1 ) & (df['BMI'].isnull()), 'BMI'] = 35.4
+
+# Split features and target
+X = df.drop(columns='Outcome')
+y = df['Outcome']
+
+# Scale features
+scaler = StandardScaler()
+X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+
+# Train-test split
+x_train, x_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=1)
+
+# Train model on selected features
+selected_features = ['Insulin','Glucose','BMI','Age','SkinThickness']
+x_tr = x_train[selected_features]
+
+# User input
+name = st.text_input('What is your name?').capitalize()
+
+def get_user_input():
+    insulin = st.number_input('Enter your insulin 2-Hour serum in mu U/ml')
+    glucose = st.number_input('What is your plasma glucose concentration?')
+    BMI = st.number_input('What is your Body Mass Index?')
+    age = st.number_input('Enter your age')
+    skin_thickness = st.number_input('Enter your skin fold thickness in mm')
+
+    user_data = {
+        'Insulin': insulin,
+        'Glucose': glucose,
+        'BMI': BMI,
+        'Age': age,
+        'SkinThickness': skin_thickness
     }
-    return pd.DataFrame([data])
+    return pd.DataFrame([user_data])
 
-input_df = user_input()
+user_input = get_user_input()
 
-# Preprocessing
-input_scaled = scaler.transform(input_df)
-input_lda = lda.fit_transform(input_scaled, [0])  # Dummy target for transform
+# Predict button
+if st.button('Get Result'):
+    # Scale user input using the same scaler
+    user_input_scaled = scaler.transform(pd.DataFrame([{
+        'Pregnancies': 0,  # dummy values for unused features
+        'Glucose': user_input['Glucose'][0],
+        'BloodPressure': 70,
+        'SkinThickness': user_input['SkinThickness'][0],
+        'Insulin': user_input['Insulin'][0],
+        'BMI': user_input['BMI'][0],
+        'DiabetesPedigreeFunction': 0.5,
+        'Age': user_input['Age'][0]
+    }]))
+    user_input_df = pd.DataFrame(user_input_scaled, columns=X.columns)[selected_features]
 
-# Prediction
-prediction = model.predict(input_lda)
+    # Train and predict
+    gb = GradientBoostingClassifier(random_state=1)
+    gb.fit(x_tr, y_train)
+    prediction = gb.predict(user_input_df)
 
-# Output
-st.subheader("Prediction Result")
-if prediction[0] == 1:
-    st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
-else:
-    st.success("✅ The model predicts: **No Diabetes**")
-
+    # Output
+    if prediction[0] == 1:
+        st.error(f"{name}, you either have diabetes or are likely to have it. Please visit the doctor as soon as possible.")
+    else:
+        st.success(f"Hurray! {name}, you are diabetes FREE.")

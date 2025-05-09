@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import os
 
 # Set page configuration
 st.set_page_config(
@@ -83,7 +84,9 @@ st.write(user_input)
 # Load the trained model
 @st.cache_resource
 def load_model():
-    model = joblib.load('diabetes_model.joblib')
+    #model = joblib.load('diabetes_model.joblib')
+    model_path = os.path.join(os.path.dirname(__file__), "diabetes_model.joblib")
+    model = joblib.load(model_path)
     return model
 
 # Make prediction with the model
@@ -129,9 +132,4 @@ try:
         st.write("No major risk factors identified!")
         
 except:
-    import os
-    
-    st.write("Current working directory:", os.getcwd())
-    st.write("Files in directory:", os.listdir())
-
     st.error("Please make sure the model file 'diabetes_model.joblib' is uploaded.")

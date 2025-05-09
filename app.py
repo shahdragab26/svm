@@ -4,7 +4,6 @@ import numpy as np
 import joblib
 
 # Load the trained model and LDA transformer
-scaler = joblib.load("scaler.joblib")
 lda = joblib.load("lda_transformer.joblib")
 model = joblib.load("diabetes_model.joblib")
 
@@ -42,8 +41,7 @@ input_data = np.array([list(features.values())]).astype(float)
 # Predict
 if st.button("Predict"):
     input_reduced = lda.transform(input_data)  # Apply LDA transformation
-    input_scaled = scaler.transform(input_reduced)
-    prediction = model.predict(input_scaled)  # Predict with SVM
+    prediction = model.predict(input_reduced)  # Predict with SVM
     if prediction[0] == -1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:

@@ -1,55 +1,70 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 
-# Load pre-trained objects
-model = joblib.load('diabetes_model.joblib')
-scaler = joblib.load('scaler.joblib')
-lda = joblib.load('lda.joblib')
+# Load the model and scaler
+@st.cache_resource
+def load_model():
+    with open("diabetes_model.joblib", "rb") as file:
+        model = pickle.load(file)
+    with open("scaler.joblib", "rb") as file:
+        scaler = pickle.load(file)
+    return model, scaler
 
-st.title("🩺 Diabetes Risk Classifier")
-st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
+rf_model, scaler = load_model()
 
-# Input fields
-def user_input():
-    data = {
-        'HighBP': st.selectbox('High Blood Pressure', [0, 1]),
-        'HighChol': st.selectbox('High Cholesterol', [0, 1]),
-        'CholCheck': st.selectbox('Cholesterol Check in Past 5 Years', [0, 1]),
-        'BMI': st.slider('Body Mass Index', 10.0, 100.0, 25.0),
-        'Smoker': st.selectbox('Smoker', [0, 1]),
-        'Stroke': st.selectbox('Stroke', [0, 1]),
-        'HeartDiseaseorAttack': st.selectbox('Heart Disease or Attack', [0, 1]),
-        'PhysActivity': st.selectbox('Physical Activity', [0, 1]),
-        'Fruits': st.selectbox('Consumes Fruit Daily', [0, 1]),
-        'Veggies': st.selectbox('Consumes Vegetables Daily', [0, 1]),
-        'HvyAlcoholConsump': st.selectbox('Heavy Alcohol Consumption', [0, 1]),
-        'AnyHealthcare': st.selectbox('Has Healthcare Coverage', [0, 1]),
-        'NoDocbcCost': st.selectbox('Skipped Doctor Due to Cost', [0, 1]),
-        'GenHlth': st.selectbox('General Health (1=Excellent, 5=Poor)', [1, 2, 3, 4, 5]),
-        'MentHlth': st.slider('Poor Mental Health Days (last 30)', 0, 30, 0),
-        'PhysHlth': st.slider('Poor Physical Health Days (last 30)', 0, 30, 0),
-        'DiffWalk': st.selectbox('Difficulty Walking', [0, 1]),
-        'Sex': st.selectbox('Sex (0=Female, 1=Male)', [0, 1]),
-        'Age': st.selectbox('Age Category (1=18-24, ..., 13=80+)', list(range(1, 14))),
-        'Education': st.selectbox('Education Level (1=None, 6=College Grad)', list(range(1, 7))),
-        'Income': st.selectbox('Income Level (1=<10k, 8=75k+)', list(range(1, 9)))
-    }
-    return pd.DataFrame([data])
+# Define the input fields for the app
+st.title("Diabetes Prediction App")
+st.write("Enter the following details to predict the likelihood of diabetes:")
 
-input_df = user_input()
+# Create a form for user input
+with st.form("diabetes_form"):
+    st.header("Patient Information")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        glucose = st.number_input("Glucose", min_value=0, max_value=200, value=120, help="Plasma glucose concentration")
+        bmi = st.number_input("BMI", min_value=0.0, max_value=70.0, value=30.0, help="Body mass index (weight in kg/(height in m)^2)")
+    
+    with col2:
+        dpf = st.number_input("Diabetes Pedigree Function", min_value=0.0, max_value=3.0, value=0.5, help="Diabetes pedigree function")
+        age = st.number_input("Age", min_value=0, max_value=120, value=25, help="Age in years")
+    
+    # Submit button
+    submit_button = st.form_submit_button(label="Predict")
 
-# Preprocessing
-input_scaled = scaler.transform(input_df)
-input_lda = lda.transform(input_scaled)  # Only transform, do not fit
+# Create a dataframe for the input data
+input_data = pd.DataFrame({
+    'Glucose': [glucose],
+    'BMI': [bmi],
+    'DiabetesPedigreeFunction': [dpf],
+    'Age': [age]
+})
 
-# Prediction
-prediction = model.predict(input_lda)
+# Scale the input data
+input_data_scaled = scaler.transform(input_data)
 
-# Output
-st.subheader("Prediction Result")
-if prediction[0] == 1:
-    st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
-else:
-    st.success("✅ The model predicts: **No Diabetes**")
+# Make a prediction
+if submit_button:
+    try:
+        prediction = rf_model.predict(input_data_scaled)
+        # Display the prediction
+        if prediction[0] == 1:
+            st.markdown(
+                '<div style="background-color: blue; padding: 10px; border-radius: 5px;">'
+                'The model predicts that the person is likely to have diabetes.'
+                '</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(
+                '<div style="background-color: green; padding: 10px; border-radius: 5px;">'
+                'The model predicts that the person is not likely to have diabetes.'
+                '</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 
+# Add some additional information
+st.sidebar.header("About")
+st.sidebar.write("""
+This app uses a machine learning model to predict the likelihood of diabetes based on user input.
+The model was trained on the Pima Indians Diabetes Database.
+""")

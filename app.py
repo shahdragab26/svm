@@ -4,5 +4,5 @@ import numpy as np
 import joblib
 
 
-model = joblib.load('svm_model.joblib')
+model = joblib.load("diabetes_model.joblib")
 

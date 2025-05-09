@@ -7,7 +7,8 @@ import joblib
 model = joblib.load("diabetes_model.joblib")
 lda = joblib.load("lda_transformer.joblib")  # Make sure this file exists
 
-st.title("🧠 Anomaly Detection with SVM")
+st.title("🩺 Diabetes Risk Classifier")
+st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
 
 # Input fields for all 21 features
 features = {
@@ -42,6 +43,6 @@ if st.button("Check for Anomaly"):
     input_reduced = lda.transform(input_data)  # Apply LDA transformation
     prediction = model.predict(input_reduced)  # Predict with SVM
     if prediction[0] == -1:
-        st.error("⚠️ Anomaly Detected!")
+        st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
-        st.success("✅ Normal Data Point")
+        st.success("✅ The model predicts: **No Diabetes**")

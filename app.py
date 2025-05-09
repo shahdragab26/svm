@@ -20,11 +20,12 @@ for feature in feature_names:
     input_data[feature] = st.number_input(f"{feature}", value=0.0)
 
 if st.button("Predict"):
-    input_df = pd.DataFrame([input_data])
+    input_df = pd.DataFrame([input_data], columns=feature_names)
     input_scaled = scaler.transform(input_df)
     input_lda = lda.transform(input_scaled)
     input_lda_scaled = scaler.transform(input_lda)
     prediction = svm.predict(input_lda_scaled)
     result = "Diabetes" if prediction[0] == 1 else "No Diabetes"
     st.success(f"### Prediction: {result}")
+
 

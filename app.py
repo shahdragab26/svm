@@ -4,8 +4,9 @@ import numpy as np
 import joblib
 
 # Load the trained model and LDA transformer
+scaler = joblib.load("scaler.joblib")
+lda = joblib.load("lda_transformer.joblib")
 model = joblib.load("diabetes_model.joblib")
-lda = joblib.load("lda_transformer.joblib")  # Make sure this file exists
 
 st.title("🩺 Diabetes Risk Classifier")
 st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
@@ -41,12 +42,12 @@ input_data = np.array([list(features.values())]).astype(float)
 # Predict
 if st.button("Predict"):
     input_reduced = lda.transform(input_data)  # Apply LDA transformation
-    prediction = model.predict(input_reduced)  # Predict with SVM
+    input_scaled = scaler.transform(input_reduced)
+    prediction = model.predict(input_scaled)  # Predict with SVM
     if prediction[0] == -1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
         st.success("✅ The model predicts: **No Diabetes**")
-
 
 
 

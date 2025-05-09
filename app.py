@@ -129,4 +129,9 @@ try:
         st.write("No major risk factors identified!")
         
 except:
+    import os
+    
+    st.write("Current working directory:", os.getcwd())
+    st.write("Files in directory:", os.listdir())
+
     st.error("Please make sure the model file 'diabetes_model.joblib' is uploaded.")

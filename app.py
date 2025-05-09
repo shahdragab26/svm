@@ -19,55 +19,32 @@ Enter your health information below to get a prediction.
 st.sidebar.header("User Health Information")
 
 def user_input_features():
-    highbp = st.sidebar.selectbox('High Blood Pressure', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    highchol = st.sidebar.selectbox('High Cholesterol', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    cholcheck = st.sidebar.selectbox('Cholesterol Check in Past 5 Years', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    bmi = st.sidebar.slider('BMI', 10.0, 50.0, 25.0, 0.1)
-    smoker = st.sidebar.selectbox('Smoker (100+ cigarettes in lifetime)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    stroke = st.sidebar.selectbox('Had a Stroke', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    heart_disease = st.sidebar.selectbox('Heart Disease or Attack', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    phys_activity = st.sidebar.selectbox('Physical Activity in Past 30 Days', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    fruits = st.sidebar.selectbox('Fruit Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    veggies = st.sidebar.selectbox('Vegetable Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    hvy_alcohol = st.sidebar.selectbox('Heavy Alcohol Consumption', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    healthcare = st.sidebar.selectbox('Any Healthcare Coverage', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    no_doc_cost = st.sidebar.selectbox('Could Not See Doctor Due to Cost', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    gen_health = st.sidebar.slider('General Health (1=Excellent, 5=Poor)', 1, 5, 3, 1)
-    ment_health = st.sidebar.slider('Days of Poor Mental Health (Past 30 Days)', 0, 30, 0, 1)
-    phys_health = st.sidebar.slider('Days of Poor Physical Health (Past 30 Days)', 0, 30, 0, 1)
-    diff_walk = st.sidebar.selectbox('Difficulty Walking or Climbing Stairs', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-    sex = st.sidebar.selectbox('Sex', [0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
-    age_category = st.sidebar.slider('Age Category (1=18-24, 13=80+)', 1, 13, 6, 1)
-    education = st.sidebar.slider('Education Level (1=None, 6=College Graduate)', 1, 6, 4, 1)
-    income = st.sidebar.slider('Income Category (1=<$10k, 8=$75k+)', 1, 8, 4, 1)
-
-    data = {
-        'HighBP': highbp,
-        'HighChol': highchol,
-        'CholCheck': cholcheck,
-        'BMI': bmi,
-        'Smoker': smoker,
-        'Stroke': stroke,
-        'HeartDiseaseorAttack': heart_disease,
-        'PhysActivity': phys_activity,
-        'Fruits': fruits,
-        'Veggies': veggies,
-        'HvyAlcoholConsump': hvy_alcohol,
-        'AnyHealthcare': healthcare,
-        'NoDocbcCost': no_doc_cost,
-        'GenHlth': gen_health,
-        'MentHlth': ment_health,
-        'PhysHlth': phys_health,
-        'DiffWalk': diff_walk,
-        'Sex': sex,
-        'Age': age_category,
-        'Education': education,
-        'Income': income
+    inputs = {
+        'HighBP': st.sidebar.selectbox('High Blood Pressure', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'HighChol': st.sidebar.selectbox('High Cholesterol', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'CholCheck': st.sidebar.selectbox('Cholesterol Check in Past 5 Years', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'BMI': st.sidebar.slider('BMI', 10.0, 50.0, 25.0, 0.1),
+        'Smoker': st.sidebar.selectbox('Smoker (100+ cigarettes in lifetime)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'Stroke': st.sidebar.selectbox('Had a Stroke', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'HeartDiseaseorAttack': st.sidebar.selectbox('Heart Disease or Attack', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'PhysActivity': st.sidebar.selectbox('Physical Activity in Past 30 Days', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'Fruits': st.sidebar.selectbox('Fruit Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'Veggies': st.sidebar.selectbox('Vegetable Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'HvyAlcoholConsump': st.sidebar.selectbox('Heavy Alcohol Consumption', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'AnyHealthcare': st.sidebar.selectbox('Any Healthcare Coverage', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'NoDocbcCost': st.sidebar.selectbox('Could Not See Doctor Due to Cost', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'GenHlth': st.sidebar.slider('General Health (1=Excellent, 5=Poor)', 1, 5, 3, 1),
+        'MentHlth': st.sidebar.slider('Days of Poor Mental Health (Past 30 Days)', 0, 30, 0, 1),
+        'PhysHlth': st.sidebar.slider('Days of Poor Physical Health (Past 30 Days)', 0, 30, 0, 1),
+        'DiffWalk': st.sidebar.selectbox('Difficulty Walking or Climbing Stairs', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
+        'Sex': st.sidebar.selectbox('Sex', [0, 1], format_func=lambda x: "Female" if x == 0 else "Male"),
+        'Age': st.sidebar.slider('Age Category (1=18-24, 13=80+)', 1, 13, 6, 1),
+        'Education': st.sidebar.slider('Education Level (1=None, 6=College Graduate)', 1, 6, 4, 1),
+        'Income': st.sidebar.slider('Income Category (1=<$10k, 8=$75k+)', 1, 8, 4, 1)
     }
+    return pd.DataFrame([inputs])
 
-    return pd.DataFrame(data, index=[0])
-
-# LDA weights from your notebook
+# LDA weights from your training
 lda_weights = {
     'GenHlth': 0.506704,
     'BMI': 0.383638,
@@ -93,8 +70,9 @@ lda_weights = {
 }
 
 def compute_ld1(input_df):
-    ld1 = sum(input_df[col].iloc[0] * lda_weights[col] for col in lda_weights)
-    return pd.DataFrame({'LD1': [ld1]})
+    return pd.DataFrame({
+        'LD1': [sum(input_df[col].iloc[0] * lda_weights[col] for col in lda_weights)]
+    })
 
 @st.cache_resource
 def load_model():
@@ -125,3 +103,4 @@ try:
 except Exception as e:
     st.error("An error occurred.")
     st.write(f"Error details: {e}")
+

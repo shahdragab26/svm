@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import os
 
 # Set page configuration
 st.set_page_config(
@@ -81,96 +80,53 @@ user_input = user_input_features()
 st.subheader('User Input Parameters')
 st.write(user_input)
 
-# Show directory contents - helpful for debugging
-st.sidebar.subheader("Debug Information")
-files_in_directory = os.listdir('.')
-st.sidebar.write("Files in directory:")
-st.sidebar.write(files_in_directory)
-
 # Load the trained model
 @st.cache_resource
 def load_model():
-    try:
-        # First try the root directory
-        if 'diabetes_model.joblib' in files_in_directory:
-            model = joblib.load('diabetes_model.joblib')
-            return model
-        # Try alternate locations
-        elif os.path.exists('./models/diabetes_model.joblib'):
-            model = joblib.load('./models/diabetes_model.joblib')
-            return model
-        else:
-            st.sidebar.error("Model file not found in searched locations")
-            return None
-    except Exception as e:
-        st.sidebar.error(f"Error loading model: {str(e)}")
-        return None
+    model = joblib.load('diabetes_model.joblib')
+    return model
 
 # Make prediction with the model
 def predict(model, input_df):
-    try:
-        prediction = model.predict(input_df)
-        probability = model.predict_proba(input_df)
-        return prediction, probability
-    except Exception as e:
-        st.error(f"Error making prediction: {str(e)}")
-        return None, None
+    prediction = model.predict(input_df)
+    probability = model.predict_proba(input_df)
+    return prediction, probability
 
-# Load the model
-model = load_model()
-
-# Make prediction if model is available
-if model is not None:
-    try:
-        prediction, probability = predict(model, user_input)
+# Make prediction when model is available
+try:
+    model = load_model()
+    prediction, probability = predict(model, user_input)
+    
+    # Display the prediction
+    st.subheader('Prediction')
+    diabetes_prediction = prediction[0]
+    if diabetes_prediction == 1:
+        st.error('⚠️ High Risk of Diabetes!')
+        risk_percentage = round(probability[0][1] * 100, 2)
+        st.write(f"The model predicts a {risk_percentage}% chance of diabetes or prediabetes.")
+    else:
+        st.success('✅ Low Risk of Diabetes')
+        no_risk_percentage = round(probability[0][0] * 100, 2)
+        st.write(f"The model predicts a {no_risk_percentage}% chance of not having diabetes.")
+    
+    # Display additional information
+    st.subheader('Risk Factors')
+    risk_factors = []
+    if user_input['HighBP'].iloc[0] == 1:
+        risk_factors.append("High Blood Pressure")
+    if user_input['HighChol'].iloc[0] == 1:
+        risk_factors.append("High Cholesterol")
+    if user_input['BMI'].iloc[0] > 30:
+        risk_factors.append("Obesity (BMI > 30)")
+    if user_input['Smoker'].iloc[0] == 1:
+        risk_factors.append("Smoker")
         
-        if prediction is not None and probability is not None:
-            # Display the prediction
-            st.subheader('Prediction')
-            diabetes_prediction = prediction[0]
-            if diabetes_prediction == 1:
-                st.error('⚠️ High Risk of Diabetes!')
-                risk_percentage = round(probability[0][1] * 100, 2)
-                st.write(f"The model predicts a {risk_percentage}% chance of diabetes or prediabetes.")
-            else:
-                st.success('✅ Low Risk of Diabetes')
-                no_risk_percentage = round(probability[0][0] * 100, 2)
-                st.write(f"The model predicts a {no_risk_percentage}% chance of not having diabetes.")
-            
-            # Display additional information
-            st.subheader('Risk Factors')
-            risk_factors = []
-            if user_input['HighBP'].iloc[0] == 1:
-                risk_factors.append("High Blood Pressure")
-            if user_input['HighChol'].iloc[0] == 1:
-                risk_factors.append("High Cholesterol")
-            if user_input['BMI'].iloc[0] > 30:
-                risk_factors.append("Obesity (BMI > 30)")
-            if user_input['Smoker'].iloc[0] == 1:
-                risk_factors.append("Smoker")
-                
-            if risk_factors:
-                st.write("Your key risk factors include:")
-                for factor in risk_factors:
-                    st.write(f"- {factor}")
-            else:
-                st.write("No major risk factors identified!")
-    except Exception as e:
-        st.error(f"An error occurred during prediction: {str(e)}")
-else:
-    st.error("Model could not be loaded. Please ensure the model file 'diabetes_model.joblib' is correctly uploaded.")
-    st.info("Make sure to save your trained model from Google Colab and upload it to the same directory as this app.")
-    st.info("If you haven't saved your model yet, add the following code to your Google Colab notebook:")
-    
-    st.code("""
-    # Install joblib
-    !pip install joblib
-    
-    # Save your model (replace 'svm_model' with your actual model variable name)
-    import joblib
-    joblib.dump(svm_model, 'diabetes_model.joblib')
-    
-    # Download the model file
-    from google.colab import files
-    files.download('diabetes_model.joblib')
-    """)
+    if risk_factors:
+        st.write("Your key risk factors include:")
+        for factor in risk_factors:
+            st.write(f"- {factor}")
+    else:
+        st.write("No major risk factors identified!")
+        
+except:
+    st.error("Please make sure the model file 'diabetes_model.joblib' is uploaded.")

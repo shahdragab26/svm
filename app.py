@@ -128,6 +128,5 @@ try:
     else:
         st.write("No major risk factors identified!")
         
-except Exception as e:
+except:
     st.error("Please make sure the model file 'diabetes_model.joblib' is uploaded.")
-    st.text(f"Error details: {str(e)}")  # ADD THIS LINE to see actual error

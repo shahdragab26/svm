@@ -83,7 +83,7 @@ st.write(user_input)
 # Load the trained model
 @st.cache_resource
 def load_model():
-    model = joblib.load('diabetes_model.joblib')
+    model = joblib.load('diabetes_model.joblib', rb)
     return model
 
 # Make prediction with the model

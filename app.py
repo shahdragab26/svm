@@ -4,8 +4,8 @@ import numpy as np
 import joblib
 
 # Load the trained model and LDA transformer
-model = joblib.load("diabetes_model.joblib" , "rb")
-lda = joblib.load("lda_transformer.joblib", "rb")  # Make sure this file exists
+model = joblib.load("diabetes_model.joblib")
+lda = joblib.load("lda_transformer.joblib")  # Make sure this file exists
 
 st.title("🩺 Diabetes Risk Classifier")
 st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")

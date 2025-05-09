@@ -39,7 +39,7 @@ features = {
 input_data = np.array([list(features.values())]).astype(float)
 
 # Predict
-if st.button("Check for Anomaly"):
+if st.button("Predict"):
     input_reduced = lda.transform(input_data)  # Apply LDA transformation
     prediction = model.predict(input_reduced)  # Predict with SVM
     if prediction[0] == -1:

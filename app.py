@@ -3,12 +3,13 @@ import pandas as pd
 import numpy as np
 import joblib
 
-
+# Load the trained model and LDA transformer
 model = joblib.load("diabetes_model.joblib")
+lda = joblib.load("lda_transformer.joblib")  # Make sure this file exists
 
 st.title("🧠 Anomaly Detection with SVM")
 
-# Input fields for all 20 features
+# Input fields for all 21 features
 features = {
     "GenHlth": st.slider("General Health (1=Excellent, 5=Poor)", 1, 5, 3),
     "BMI": st.number_input("BMI", 10.0, 60.0, 25.0),
@@ -38,10 +39,9 @@ input_data = np.array([list(features.values())]).astype(float)
 
 # Predict
 if st.button("Check for Anomaly"):
-    prediction = model.predict(input_data)
+    input_reduced = lda.transform(input_data)  # Apply LDA transformation
+    prediction = model.predict(input_reduced)  # Predict with SVM
     if prediction[0] == -1:
         st.error("⚠️ Anomaly Detected!")
     else:
         st.success("✅ Normal Data Point")
-
-

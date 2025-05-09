@@ -42,7 +42,7 @@ input_data = np.array([list(features.values())]).astype(float)
 if st.button("Predict"):
     input_reduced = lda.transform(input_data)  # Apply LDA transformation
     prediction = model.predict(input_reduced)  # Predict with SVM
-    if prediction[0] == -1:
+    if prediction[0] == 1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
         st.success("✅ The model predicts: **No Diabetes**")

@@ -1,106 +1,117 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+from sklearn.preprocessing import StandardScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize, LinearSegmentedColormap
 
-# Set page configuration
-st.set_page_config(
-    page_title="Diabetes Risk Predictor",
-    page_icon="📊",
-    layout="wide"
-)
+# Streamlit app
+st.title("Diabetes Classification using LDA and SVM")
 
-st.title("Diabetes Risk Prediction Tool")
-st.markdown("""
-This app predicts whether a person is at risk of having diabetes based on various health indicators.
-Enter your health information below to get a prediction.
-""")
+# File upload
+uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 
-st.sidebar.header("User Health Information")
-
-def user_input_features():
-    inputs = {
-        'HighBP': st.sidebar.selectbox('High Blood Pressure', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'HighChol': st.sidebar.selectbox('High Cholesterol', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'CholCheck': st.sidebar.selectbox('Cholesterol Check in Past 5 Years', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'BMI': st.sidebar.slider('BMI', 10.0, 50.0, 25.0, 0.1),
-        'Smoker': st.sidebar.selectbox('Smoker (100+ cigarettes in lifetime)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'Stroke': st.sidebar.selectbox('Had a Stroke', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'HeartDiseaseorAttack': st.sidebar.selectbox('Heart Disease or Attack', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'PhysActivity': st.sidebar.selectbox('Physical Activity in Past 30 Days', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'Fruits': st.sidebar.selectbox('Fruit Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'Veggies': st.sidebar.selectbox('Vegetable Consumption (≥1 per day)', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'HvyAlcoholConsump': st.sidebar.selectbox('Heavy Alcohol Consumption', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'AnyHealthcare': st.sidebar.selectbox('Any Healthcare Coverage', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'NoDocbcCost': st.sidebar.selectbox('Could Not See Doctor Due to Cost', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'GenHlth': st.sidebar.slider('General Health (1=Excellent, 5=Poor)', 1, 5, 3, 1),
-        'MentHlth': st.sidebar.slider('Days of Poor Mental Health (Past 30 Days)', 0, 30, 0, 1),
-        'PhysHlth': st.sidebar.slider('Days of Poor Physical Health (Past 30 Days)', 0, 30, 0, 1),
-        'DiffWalk': st.sidebar.selectbox('Difficulty Walking or Climbing Stairs', [0, 1], format_func=lambda x: "No" if x == 0 else "Yes"),
-        'Sex': st.sidebar.selectbox('Sex', [0, 1], format_func=lambda x: "Female" if x == 0 else "Male"),
-        'Age': st.sidebar.slider('Age Category (1=18-24, 13=80+)', 1, 13, 6, 1),
-        'Education': st.sidebar.slider('Education Level (1=None, 6=College Graduate)', 1, 6, 4, 1),
-        'Income': st.sidebar.slider('Income Category (1=<$10k, 8=$75k+)', 1, 8, 4, 1)
-    }
-    return pd.DataFrame([inputs])
-
-# LDA weights from your training
-lda_weights = {
-    'GenHlth': 0.506704,
-    'BMI': 0.383638,
-    'HighBP': 0.324274,
-    'Age': 0.304588,
-    'HighChol': 0.235590,
-    'CholCheck': 0.108139,
-    'HvyAlcoholConsump': -0.105150,
-    'Income': -0.099983,
-    'Sex': 0.096460,
-    'HeartDiseaseorAttack': 0.078778,
-    'PhysHlth': -0.067320,
-    'DiffWalk': 0.043655,
-    'Stroke': 0.030914,
-    'MentHlth': -0.028046,
-    'Education': -0.023513,
-    'PhysActivity': -0.016400,
-    'Veggies': -0.015622,
-    'AnyHealthcare': 0.008118,
-    'Fruits': -0.005445,
-    'Smoker': -0.004337,
-    'NoDocbcCost': -0.002343
-}
-
-def compute_ld1(input_df):
-    return pd.DataFrame({
-        'LD1': [sum(input_df[col].iloc[0] * lda_weights[col] for col in lda_weights)]
-    })
-
-@st.cache_resource
-def load_model():
-    return joblib.load("diabetes_model.joblib")
-
-def predict(model, input_df):
-    prediction = model.predict(input_df)
-    probability = model.predict_proba(input_df)
-    return prediction, probability
-
-try:
-    user_input = user_input_features()
-    st.subheader("User Input Parameters")
-    st.write(user_input)
-
-    ld1_input = compute_ld1(user_input)
-    model = load_model()
-    prediction, probability = predict(model, ld1_input)
-
-    st.subheader("Prediction")
-    if prediction[0] == 1:
-        st.error("⚠️ High Risk of Diabetes!")
-        st.write(f"Risk: {round(probability[0][1] * 100, 2)}%")
+if uploaded_file is not None:
+    # Read the CSV file
+    data = pd.read_csv(uploaded_file)
+    
+    # Display the data
+    st.write("### Data Preview")
+    st.write(data.head())
+    
+    # Check if 'target' column exists
+    if 'target' not in data.columns:
+        st.error("The dataset must include a 'target' column for labels.")
     else:
-        st.success("✅ Low Risk of Diabetes")
-        st.write(f"Risk: {round(probability[0][0] * 100, 2)}%")
-
-except Exception as e:
-    st.error("An error occurred.")
-    st.write(f"Error details: {e}")
-
+        # Split features and target
+        X = data.drop(columns=['target'])
+        y = data['target']
+        
+        # Standardization
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        
+        # Dimensionality Reduction using LDA
+        lda = LinearDiscriminantAnalysis(n_components=1)
+        X_lda = lda.fit_transform(X_scaled, y)
+        
+        # Feature importance
+        feature_importance = np.abs(lda.scalings_.flatten())
+        feature_names = X.columns.tolist()
+        importance_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': feature_importance
+        }).sort_values(by='Importance', ascending=False)
+        
+        # Display feature importance
+        st.write("### Feature Importance from LDA")
+        st.write(importance_df)
+        
+        # Visualize feature importance
+        green_to_red = LinearSegmentedColormap.from_list('GreenToRed', ['#FF0000', '#00FF00'])
+        plt.figure(figsize=(12, 6))
+        norm = Normalize(vmin=importance_df['Importance'].min(), vmax=importance_df['Importance'].max())
+        colors = [green_to_red(norm(value)) for value in importance_df['Importance']]
+        sns.barplot(x='Importance', y='Feature', data=importance_df, palette=colors)
+        plt.title('Feature Importance from LDA for Diabetes Classification')
+        plt.xlabel('LDA Coefficient (Absolute Value)')
+        plt.ylabel('Feature')
+        plt.tight_layout()
+        st.pyplot(plt)
+        
+        # Split the LDA-transformed data into training and test sets
+        X_train, X_test, y_train, y_test = train_test_split(X_lda, y, test_size=0.2, random_state=42)
+        
+        # Standardize the LDA-transformed data
+        X_train_scaled_lda = scaler.fit_transform(X_train)
+        X_test_scaled_lda = scaler.transform(X_test)
+        
+        # SVM model with RandomizedSearchCV
+        param_dist = {
+            'C': [0.1, 1, 10],
+            'gamma': ['scale', 'auto', 0.1],
+            'kernel': ['rbf', 'linear', 'poly']
+        }
+        svm = SVC()
+        random_search = RandomizedSearchCV(svm, param_distributions=param_dist, n_iter=5,
+                                           cv=5, scoring='accuracy', n_jobs=-1, random_state=42)
+        random_search.fit(X_train_scaled_lda, y_train)
+        
+        # Best SVM model
+        best_svm = random_search.best_estimator_
+        st.write("### Best Parameters")
+        st.write(random_search.best_params_)
+        
+        # Predictions
+        y_pred = best_svm.predict(X_test_scaled_lda)
+        
+        # Classification report
+        st.write("### Classification Report")
+        st.text(classification_report(y_test, y_pred, target_names=['No Diabetes', 'Diabetes']))
+        
+        # Performance metrics
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred)
+        rec = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+        
+        st.write(f"**Accuracy:** {acc:.4f}")
+        st.write(f"**Precision:** {prec:.4f}")
+        st.write(f"**Recall:** {rec:.4f}")
+        st.write(f"**F1 Score:** {f1:.4f}")
+        
+        # Confusion matrix
+        cm = confusion_matrix(y_test, y_pred)
+        plt.figure(figsize=(6, 4))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                    xticklabels=['No Diabetes', 'Diabetes'],
+                    yticklabels=['No Diabetes', 'Diabetes'])
+        plt.xlabel('Predicted Label')
+        plt.ylabel('True Label')
+        plt.title('Confusion Matrix')
+        st.pyplot(plt)

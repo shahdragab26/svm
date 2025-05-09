@@ -21,11 +21,19 @@ for feature in feature_names:
 
 if st.button("Predict"):
     input_df = pd.DataFrame([input_data], columns=feature_names)
+    
+    # Step 1: Standardize original features
     input_scaled = scaler.transform(input_df)
+    
+    # Step 2: Apply LDA to get LD1
     input_lda = lda.transform(input_scaled)
-    input_lda_scaled = scaler.transform(input_lda)
-    prediction = svm.predict(input_lda_scaled)
+    
+    # Step 3: Predict using SVM (which was trained on LD1)
+    prediction = svm.predict(input_lda)
+    
     result = "Diabetes" if prediction[0] == 1 else "No Diabetes"
     st.success(f"### Prediction: {result}")
+
+
 
 

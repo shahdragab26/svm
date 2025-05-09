@@ -7,10 +7,45 @@ import joblib
 model = joblib.load("diabetes_model.joblib")
 lda = joblib.load("lda_transformer.joblib")  # Make sure this file exists
 
+st.set_page_config(page_title="Diabetes Health Indicators", layout="centered")
 st.title("🩺 Diabetes Risk Classifier")
+
+st.markdown("""
+<style>
+    .main { background-color: #f0f2f6; padding: 20px; border-radius: 10px; }
+    h1 { color: #2c3e50; }
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
 
-# Input fields for all 21 features
+# --- Upload Section ---
+st.header("📂 Upload CSV for Batch Prediction")
+uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+    st.write("📄 Uploaded Data Preview:", df.head())
+
+    try:
+        input_data = df.values.astype(float)
+        input_reduced = lda.transform(input_data)
+        predictions = model.predict(input_reduced)
+
+        df["Prediction"] = ["Anomaly" if p == -1 else "Normal" for p in predictions]
+        st.success("✅ Predictions completed!")
+        st.dataframe(df)
+
+        # Option to download results
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button("📥 Download Results", csv, "predictions.csv", "text/csv")
+
+    except Exception as e:
+        st.error(f"❌ Error processing file: {e}")
+
+# --- Manual Input Section ---
+st.header("📝 Or Enter Data Manually")
+
 features = {
     "GenHlth": st.slider("General Health (1=Excellent, 5=Poor)", 1, 5, 3),
     "BMI": st.number_input("BMI", 10.0, 60.0, 25.0),
@@ -35,8 +70,7 @@ features = {
     "NoDocbcCost": st.selectbox("Couldn’t See Doctor Due to Cost", [0, 1]),
 }
 
-# Convert to array
-input_data = np.array([list(features.values())]).astype(float)
+input_array = np.array([list(features.values())]).astype(float)
 
 # Predict
 if st.button("Predict"):

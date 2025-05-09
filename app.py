@@ -84,9 +84,9 @@ st.write(user_input)
 # Load the trained model
 @st.cache_resource
 def load_model():
-    #model = joblib.load('diabetes_model.joblib')
-    model_path = os.path.join(os.path.dirname(__file__), "diabetes_model.joblib")
-    model = joblib.load(model_path)
+    model = joblib.load('diabetes_model.joblib')
+    #model_path = os.path.join(os.path.dirname(__file__), "diabetes_model.joblib")
+    #model = joblib.load(model_path)
     return model
 
 # Make prediction with the model
@@ -131,5 +131,7 @@ try:
     else:
         st.write("No major risk factors identified!")
         
-except:
-    st.error("Please make sure the model file 'diabetes_model.joblib' is uploaded.")
+except Exception as e:
+    st.error("An error occurred while loading the model.")
+    st.write(f"Error details: {e}")
+

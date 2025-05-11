@@ -49,7 +49,7 @@ if st.button("🔍 Predict"):
     input_reduced = lda.transform(input_data)
     prediction = model.predict(input_reduced)
 
-    # Rule-based override for high-risk indicators
+    # Rule-based override
     rule_flag = (
         features["GenHlth"] >= 4 and
         features["BMI"] > 35 and
@@ -59,11 +59,18 @@ if st.button("🔍 Predict"):
     st.subheader("🔎 Result")
 
     if rule_flag:
+        final_result = "diabetic"
         st.warning("⚠️ Based on your health indicators, you may be at **risk of Diabetes** (override rule).")
     elif prediction[0] == -1:
+        final_result = "diabetic"
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
+        final_result = "not diabetic"
         st.success("✅ The model predicts: **No Diabetes**")
+
+    # Display final result
+    st.markdown(f"**Final classification: {final_result.upper()}**")
+ st.success("✅ The model predicts: **No Diabetes**")
 
 # Footer
 st.markdown("---")

@@ -12,7 +12,7 @@ model = joblib.load("diabetes_model.joblib")
 
 # --- Title and Image ---
 st.title("🩺 Diabetes Risk Classifier")
-st.image("diabetes.jpg", caption="Stay healthy. Early detection saves lives!", use_column_width=True)
+st.image("diabetes.jpg", caption="Stay healthy. Early detection saves lives!", use_container_width=True)
 st.markdown("Use this tool to check diabetes risk based on your health inputs.")
 
 # --- Input Form ---

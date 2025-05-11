@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 
 # Set page config
-st.set_page_config(page_title="Diabetes Risk Classifier", layout="centered")
+st.image("diabetes.jpg", caption="Stay healthy. Early detection saves lives!", use_container_width=True)
 
 # Load model and transformer
 lda = joblib.load("lda_transformer.joblib")

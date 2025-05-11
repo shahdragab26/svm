@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load the trained model and LDA transformer
+# Load the trained LDA transformer, scaler, and SVM model
 lda = joblib.load("lda_transformer.joblib")
+scaler = joblib.load("scaler.joblib")  # Make sure this file is uploaded
 model = joblib.load("diabetes_model.joblib")
 
 st.title("🩺 Diabetes Risk Classifier")
@@ -35,20 +36,16 @@ features = {
     "NoDocbcCost": st.selectbox("Couldn’t See Doctor Due to Cost", [0, 1]),
 }
 
-# Convert to array
+# Convert input to array
 input_data = np.array([list(features.values())]).astype(float)
 
-# Predict
+# Predict when button is clicked
 if st.button("Predict"):
-    input_reduced = lda.transform(input_data)  # Apply LDA transformation
-    prediction = model.predict(input_reduced)  # Predict with SVM
+    input_lda = lda.transform(input_data)           # Step 1: LDA transformation
+    input_scaled = scaler.transform(input_lda)      # Step 2: Apply scaling
+    prediction = model.predict(input_scaled)        # Step 3: SVM prediction
+
     if prediction[0] == -1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
         st.success("✅ The model predicts: **No Diabetes**")
-
-
-
-
-
-

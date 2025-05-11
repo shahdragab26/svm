@@ -44,33 +44,46 @@ features = {
 
 input_data = np.array([list(features.values())]).astype(float)
 
-# --- Prediction Logic ---
+# --- Prediction Logic Based on Rules ---
 if st.button("🔍 Predict"):
-    input_reduced = lda.transform(input_data)
-    prediction = model.predict(input_reduced)
-
-    # Rule-based override
-    rule_flag = (
-        features["GenHlth"] >= 4 and
-        features["BMI"] > 35 and
-        features["HighBP"] == 1
-    )
-
     st.subheader("🔎 Result")
 
-    if rule_flag:
-        final_result = "diabetic"
-        st.warning("⚠️ Based on your health indicators, you may be at **risk of Diabetes** (override rule).")
-    elif prediction[0] == -1:
-        final_result = "diabetic"
-        st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
-    else:
-        final_result = "not diabetic"
-        st.success("✅ The model predicts: **No Diabetes**")
+    # Simple rule-based logic
+    risk_score = 0
 
-    # Display final result
-    st.markdown(f"**Final classification: {final_result.upper()}**")
- st.success("✅ The model predicts: **No Diabetes**")
+    # Add points for various risk factors
+    if features["GenHlth"] >= 4:
+        risk_score += 1
+    if features["BMI"] >= 30:
+        risk_score += 1
+    if features["HighBP"] == 1:
+        risk_score += 1
+    if features["HighChol"] == 1:
+        risk_score += 1
+    if features["HeartDiseaseorAttack"] == 1:
+        risk_score += 1
+    if features["DiffWalk"] == 1:
+        risk_score += 1
+    if features["Stroke"] == 1:
+        risk_score += 1
+    if features["Age"] >= 45:
+        risk_score += 1
+    if features["PhysActivity"] == 0:
+        risk_score += 1
+    if features["Smoker"] == 1:
+        risk_score += 1
+    if features["PhysHlth"] > 10:
+        risk_score += 1
+    if features["MentHlth"] > 10:
+        risk_score += 1
+
+    # Define threshold (adjust as needed)
+    if risk_score >= 5:
+        st.error("⚠️ Based on your inputs, you may be at **risk of Diabetes**.")
+        st.markdown("**Final classification: DIABETIC**")
+    else:
+        st.success("✅ Based on your inputs, you are **unlikely to have Diabetes**.")
+        st.markdown("**Final classification: NOT DIABETIC**")
 
 # Footer
 st.markdown("---")

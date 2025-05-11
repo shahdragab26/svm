@@ -3,17 +3,24 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load the trained model and LDA transformer
+# Set page config
+st.set_page_config(page_title="Diabetes Risk Classifier", layout="centered")
+
+# Load model and transformer
 lda = joblib.load("lda_transformer.joblib")
 model = joblib.load("diabetes_model.joblib")
 
+# --- Title and Image ---
 st.title("🩺 Diabetes Risk Classifier")
-st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
+st.image("diabetes.jpg", caption="Stay healthy. Early detection saves lives!", use_column_width=True)
+st.markdown("Use this tool to check diabetes risk based on your health inputs.")
 
-# Input fields for all 21 features
+# --- Input Form ---
+st.header("📋 Enter Your Health Information")
+
 features = {
     "GenHlth": st.slider("General Health (1=Excellent, 5=Poor)", 1, 5, 3),
-    "BMI": st.number_input("BMI", 10.0, 60.0, 25.0),
+    "BMI": st.number_input("Body Mass Index (BMI)", 10.0, 60.0, 25.0),
     "HighBP": st.selectbox("High Blood Pressure", [0, 1]),
     "Age": st.slider("Age", 18, 100, 40),
     "HighChol": st.selectbox("High Cholesterol", [0, 1]),
@@ -35,19 +42,29 @@ features = {
     "NoDocbcCost": st.selectbox("Couldn’t See Doctor Due to Cost", [0, 1]),
 }
 
-# Convert to array
 input_data = np.array([list(features.values())]).astype(float)
 
-# Predict
-if st.button("Predict"):
-    input_reduced = lda.transform(input_data)  # Apply LDA transformation
-    prediction = model.predict(input_reduced)  # Predict with SVM
-    if prediction[0] == -1:
+# --- Prediction Logic ---
+if st.button("🔍 Predict"):
+    input_reduced = lda.transform(input_data)
+    prediction = model.predict(input_reduced)
+
+    # Rule-based override for high-risk indicators
+    rule_flag = (
+        features["GenHlth"] >= 4 and
+        features["BMI"] > 35 and
+        features["HighBP"] == 1
+    )
+
+    st.subheader("🔎 Result")
+
+    if rule_flag:
+        st.warning("⚠️ Based on your health indicators, you may be at **risk of Diabetes** (override rule).")
+    elif prediction[0] == -1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:
         st.success("✅ The model predicts: **No Diabetes**")
 
-
-
-
-
+# Footer
+st.markdown("---")
+st.caption("Made with ❤️ for educational purposes. Not a substitute for medical advice.")

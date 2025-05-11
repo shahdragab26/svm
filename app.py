@@ -5,10 +5,8 @@ import joblib
 
 
 
-
-# Set page config
 st.image("diabetes.jpg", caption="Stay healthy. Early detection saves lives!", use_container_width=True)
-
+st.markdown("Use this tool to check diabetes risk based on your health inputs.")
 
 # Load model and transformer
 lda = joblib.load("lda_transformer.joblib")

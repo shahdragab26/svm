@@ -1,12 +1,9 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
 import joblib
 
+# Load the trained pipeline (LDA → Scaler → SVM)
 pipeline = joblib.load("diabetes_pipeline.joblib")
-input_data = np.array([list(features.values())]).astype(float)
-prediction = pipeline.predict(input_data)
-
 
 st.title("🩺 Diabetes Risk Classifier")
 st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
@@ -36,15 +33,13 @@ features = {
     "NoDocbcCost": st.selectbox("Couldn’t See Doctor Due to Cost", [0, 1]),
 }
 
-# Convert input to array
+# Convert input to NumPy array
 input_data = np.array([list(features.values())]).astype(float)
 
-# Predict when button is clicked
+# Predict
 if st.button("Predict"):
-    input_lda = lda.transform(input_data)           # Step 1: LDA transformation
-    input_scaled = scaler.transform(input_lda)      # Step 2: Apply scaling
-    prediction = model.predict(input_scaled)        # Step 3: SVM prediction
-
+    prediction = pipeline.predict(input_data)
+    
     if prediction[0] == -1:
         st.error("⚠️ The model predicts: **Diabetes or Prediabetes**")
     else:

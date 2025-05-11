@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load the trained LDA transformer, scaler, and SVM model
-lda = joblib.load("lda_transformer.joblib")
-scaler = joblib.load("scaler.joblib")  # Make sure this file is uploaded
-model = joblib.load("diabetes_model.joblib")
+pipeline = joblib.load("diabetes_pipeline.joblib")
+input_data = np.array([list(features.values())]).astype(float)
+prediction = pipeline.predict(input_data)
+
 
 st.title("🩺 Diabetes Risk Classifier")
 st.markdown("This app predicts whether an individual is at risk of diabetes based on health indicators.")
